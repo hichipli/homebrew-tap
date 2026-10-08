@@ -1,6 +1,6 @@
 cask "citebar" do
-  version "1.6.2,20261008"
-  sha256 "a5cd23cc7a38ebef3e8c4c6ffa009820b7ce90ef57f8deb687d0e17db97ca068"
+  version "1.6.3,20261008"
+  sha256 "752a70e4970e6f08ea60d1faeedeb7f48b97b25de48587b368a8325aa88f102c"
 
   url "https://github.com/hichipli/CiteBar/releases/download/v#{version.csv.first}/CiteBar-#{version.csv.first}-universal-#{version.csv.second}.dmg"
   name "CiteBar"
