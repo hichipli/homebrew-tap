@@ -1,0 +1,38 @@
+name: Update CiteBar
+
+# Points the cask at CiteBar's latest release. Runs every few hours, or by hand after a release:
+#   gh workflow run update-citebar.yml -R hichipli/homebrew-tap
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          dmg=$(gh release view --repo hichipli/CiteBar --json assets \
+            --jq '.assets[].name | select(test("^CiteBar-.+-universal-[0-9]+\\.dmg$"))')
+          version=$(echo "$dmg" | sed -E 's/^CiteBar-(.+)-universal-([0-9]+)\.dmg$/\1,\2/')
+          current=$(sed -nE 's/^  version "(.*)"$/\1/p' Casks/citebar.rb)
+          if [ "$version" = "$current" ]; then
+            echo "Already at $version"
+            exit 0
+          fi
+          gh release download --repo hichipli/CiteBar --pattern "$dmg" --dir "$RUNNER_TEMP"
+          sha=$(sha256sum "$RUNNER_TEMP/$dmg" | cut -d' ' -f1)
+          sed -i -E "s/^  version \".*\"$/  version \"$version\"/; s/^  sha256 \".*\"$/  sha256 \"$sha\"/" Casks/citebar.rb
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(citebar): update to ${version%%,*}"
+          git push
